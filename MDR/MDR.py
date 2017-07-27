@@ -7,7 +7,7 @@ from numpy import *
 def Init_graph_time(options):
     print "Initing the user_item graph G................."
     G = [[0 for i in range(NUM_USERS + NUM_ITEMS + NUM_TYPE)] for i in range(NUM_USERS + NUM_ITEMS + NUM_TYPE)]
-    #[×ÜÖµ,ÊıÁ¿]
+    #[æ€»å€¼,æ•°é‡]
     u2t = [[[0.0,0] for i in range(NUM_USERS + NUM_ITEMS + NUM_TYPE)] for i in range(NUM_USERS + NUM_ITEMS + NUM_TYPE)]
     i2t = [[[0.0,0] for i in range(NUM_USERS + NUM_ITEMS + NUM_TYPE)] for i in range(NUM_USERS + NUM_ITEMS + NUM_TYPE)]
     fileReader = open(options.csvfile,'r')
@@ -18,7 +18,7 @@ def Init_graph_time(options):
         line = line.replace("\r","")
         line = line.split(" ")
         '''
-        #ÑµÁ·¼¯ÖĞÖ»È¡ÓÃ»§Ï²»¶µÄĞĞÎª
+        #è®­ç»ƒé›†ä¸­åªå–ç”¨æˆ·å–œæ¬¢çš„è¡Œä¸º
         if int(line[9]) == 0:
             continue
         '''
@@ -30,7 +30,7 @@ def Init_graph_time(options):
         #score = 1
         G[user-1][item-1] = score
         G[item-1][user-1] = score
-        #¶ÁÎïÆ·ÀàĞÍ
+        #è¯»ç‰©å“ç±»å‹
         info = file2[item - NUM_USERS - 1]
         info = info.replace("\n","")
         info = info.replace("\r","")
@@ -77,46 +77,14 @@ def Init_graph_time(options):
 
     return G
 
-def Hammock(G,uw):
-    print "Start to add edges via Hammock..............."
-    print "User Hammock width is " + str(uw)
-    G_hammock = G
-    u2u = [[[0,0] for i in range(NUM_USERS)] for i in range(NUM_USERS)]
-    for i in range(NUM_USERS,NUM_USERS + NUM_ITEMS):
-        for j in range(NUM_USERS):
-            if G[i][j] == 0:
-                continue
-            for k in range(NUM_USERS):
-                if k == j or G[i][k] == 0:
-                    continue
-                if u2u[k][j][1] > 0:
-                    u2u[k][j][1] += G[i][j]
-                    u2u[k][j][0] += 1
-                    continue
-                u2u[j][k][1] += G[i][j]
-                u2u[j][k][0] += 1
-    nrofU2U = 0
-    w = open("hammock.csv",'w')
-    for i in range(NUM_USERS):
-        for j in range(NUM_USERS):
-            if u2u[i][j][1] >= uw:
-                nrofU2U += 1
-                G_hammock[i][j] = float(u2u[i][j][1]) / u2u[i][j][0]
-                G_hammock[j][i] = G_hammock[i][j]
-                w.write(str(i+1) + " " + str(j+1) + " hammock" + "\n")
-    w.close()
-    nrofU2U = float(nrofU2U)
-    print "nrofU2U via Hammock: " + str(nrofU2U)
-    print
-    return G_hammock
 
 
 def PersonalRank(alpha, steps, trasMatrix, type):
 
     M = mat(trasMatrix)
     MT = M.T
-    #rÊÇ½ÚµãÏàËÆ¶È¾ØÕó
-    #qÊÇ²éÑ¯ÏòÁ¿
+    #ræ˜¯èŠ‚ç‚¹ç›¸ä¼¼åº¦çŸ©é˜µ
+    #qæ˜¯æŸ¥è¯¢å‘é‡
     query ="query"+"_type"+str(type)+".csv"
     out1 = open(query,'w')
     q = zeros((NUM_ITEMS+NUM_USERS+NUM_TYPE, NUM_USERS), float)
@@ -133,7 +101,7 @@ def PersonalRank(alpha, steps, trasMatrix, type):
     for i in range(steps):
         r = alpha * MT * r + (1-alpha)*q
     r = r.tolist()
-    #½«½ÚµãÏàËÆ¶È¾ØÕóµÄĞĞºÍÖµºÍÁĞºÍÖµĞ´ÈëÎÄ¼ş
+    #å°†èŠ‚ç‚¹ç›¸ä¼¼åº¦çŸ©é˜µçš„è¡Œå’Œå€¼å’Œåˆ—å’Œå€¼å†™å…¥æ–‡ä»¶
     out1 = "sum_colum"+str(type)+".csv"
     file1 = open(out1,"w")
     for i in range(len(r[0])):
@@ -162,23 +130,23 @@ def RemAndEva(time,nrofRecommendList,user_rank,user_items,options,nrofAll_items)
 def Recommend(time,nrofRecommendList,user_rank,user_items,options):
     print "Start to recommend................."
     print "nrofRecommendList: " + str(nrofRecommendList)
-    #user_recommendListÊÇÒ»¸ö¾ØÕó£¬Ã¿ĞĞ´ú±íÕâ¸öÓÃ»§µÄ·ÃÎÊ¸ÅÂÊ·Ö²¼
+    #user_recommendListæ˜¯ä¸€ä¸ªçŸ©é˜µï¼Œæ¯è¡Œä»£è¡¨è¿™ä¸ªç”¨æˆ·çš„è®¿é—®æ¦‚ç‡åˆ†å¸ƒ
     user_recommendList = [[[0 for i in range(2)] for i in range(nrofRecommendList)] for i in range(NUM_USERS)]
     fileReader2 = open(options.csvfile2,'r')
     file2 = fileReader2.readlines()
     for user in range(NUM_USERS):
         for item in range(NUM_ITEMS):
             if user_items[user][item] == 1:
-                continue                #ÓÃ»§ÒÑ¶Ô¸ÃµçÓ°ÆÀ¹ı·Ö
-                #¼ì²éitemÊÇ²»ÊÇµ±Ç°ÍÆ¼öÀàĞÍ
+                continue                #ç”¨æˆ·å·²å¯¹è¯¥ç”µå½±è¯„è¿‡åˆ†
+                #æ£€æŸ¥itemæ˜¯ä¸æ˜¯å½“å‰æ¨èç±»å‹
             info = file2[item]
             info = info.split(",")
             type_info = info[1].split("|")[0:-1]
-            if type_info[time-1] != "1":            #µ±Ç°item²»ÊÇµ±Ç°ÍÆ¼öÀàĞÍ
+            if type_info[time-1] != "1":            #å½“å‰itemä¸æ˜¯å½“å‰æ¨èç±»å‹
                 continue
             if user_rank[item+NUM_USERS][user] < user_recommendList[user][nrofRecommendList-1][1]:
-                continue                        #±Èµ±Ç°ÍÆ¼öÁĞ±í×îºóÒ»¸öÔªËØµÄÏà¹Ø¶ÈµÍ£¨ÎŞ·¨²åÈëÍÆ¼öÁĞ±í£©
-            #½«µ±Ç°µçÓ°²åÈë(½µĞò£©µ½ÍÆ¼öÁĞ±íÖĞ
+                continue                        #æ¯”å½“å‰æ¨èåˆ—è¡¨æœ€åä¸€ä¸ªå…ƒç´ çš„ç›¸å…³åº¦ä½ï¼ˆæ— æ³•æ’å…¥æ¨èåˆ—è¡¨ï¼‰
+            #å°†å½“å‰ç”µå½±æ’å…¥(é™åºï¼‰åˆ°æ¨èåˆ—è¡¨ä¸­
             for i in range(nrofRecommendList-2,-1,-1):
                 if user_recommendList[user][i][1] < user_rank[item+NUM_USERS][user]:
                     user_recommendList[user][i+1][1] = user_recommendList[user][i][1]
@@ -201,7 +169,7 @@ def Evaluate(time,user_recommendList,nrofAll_items,options):
     RecommendedList = set()
 
     test_user_items = [[0 for i in range(NUM_ITEMS)] for i in range(NUM_USERS)]
-    #ÓµÓĞÀàĞÍtimeµÄÎïÆ·
+    #æ‹¥æœ‰ç±»å‹timeçš„ç‰©å“
     fileReader = open(options.csvfile2,'r')
     item_HasTime = set()
     for line in fileReader.readlines():
@@ -220,12 +188,12 @@ def Evaluate(time,user_recommendList,nrofAll_items,options):
         line = line.replace("\r","")
         line = line.split(" ")
         '''
-        #ÑµÁ·¼¯ÖĞÖ»È¡ÓÃ»§Ï²»¶µÄĞĞÎª
+        #è®­ç»ƒé›†ä¸­åªå–ç”¨æˆ·å–œæ¬¢çš„è¡Œä¸º
         if int(line[9]) == 0:
             continue
         '''
         item = int(line[1])
-        #Ö»Ê¹ÓÃµ±Ç°ÀàĞÍµÄ²âÊÔ¼¯
+        #åªä½¿ç”¨å½“å‰ç±»å‹çš„æµ‹è¯•é›†
         if item not in item_HasTime:
             continue
         user = int(line[0])
@@ -252,7 +220,7 @@ def Evaluate(time,user_recommendList,nrofAll_items,options):
     print "nrofAll_items: " + str(nrofAll_items)
     print "RecommendedList: " + str(len(RecommendedList))
     
-    #»ØÕÙÂÊ£¬×¼È·ÂÊ£¬¸²¸ÇÂÊ£¬Á÷ĞĞ¶È
+    #å›å¬ç‡ï¼Œå‡†ç¡®ç‡ï¼Œè¦†ç›–ç‡ï¼Œæµè¡Œåº¦
     if nrofTu == 0:
         Recall = 0.0
     else:
@@ -274,9 +242,9 @@ def Evaluate(time,user_recommendList,nrofAll_items,options):
 
     out = options.outfile[:-4] + "_type" + str(time) + ".csv"
     fileWrite = open(out, 'w')
-    fileWrite.write("×¼È·ÂÊ    ÕÙ»ØÂÊ    ¸²¸ÇÂÊ    F»Ø¹é" + "\n")
+    fileWrite.write("å‡†ç¡®ç‡    å¬å›ç‡    è¦†ç›–ç‡    Få›å½’" + "\n")
     fileWrite.write(Precision + "    " + Recall + "    " + Coverage + "    " + str(f) + "\n")
-    fileWrite.write("ÃüÖĞ¸öÊı: " + str(nrofCommonElements) + "\n")
+    fileWrite.write("å‘½ä¸­ä¸ªæ•°: " + str(nrofCommonElements) + "\n")
     fileWrite.write("nrofRu: " + str(nrofRu) + "\n")
     fileWrite.write("nrofTu: " + str(nrofTu) + "\n")
     fileWrite.close()
@@ -320,7 +288,7 @@ if __name__ == "__main__":
         allitems = set()
         allusers = set()
                    
-        #Í³¼ÆÑµÁ·¼¯ÖĞµÄÈËÊı¡¢ÎïÆ·Êı
+        #ç»Ÿè®¡è®­ç»ƒé›†ä¸­çš„äººæ•°ã€ç‰©å“æ•°
         fileReader = open(options.csvfile,'r')
         for line in fileReader.readlines():
             line = line.replace("\n","")
@@ -337,7 +305,7 @@ if __name__ == "__main__":
         allitems = trainitems
         allusers = trainusers
         test_user_items = []
-        #Í³¼Æ²âÊÔ¼¯ÖĞµÄÈËÊı¡¢ÎïÆ·Êı
+        #ç»Ÿè®¡æµ‹è¯•é›†ä¸­çš„äººæ•°ã€ç‰©å“æ•°
         fileReader = open(options.csvfile3,'r')
         for line in fileReader.readlines():
             line = line.replace("\n","")
@@ -362,7 +330,7 @@ if __name__ == "__main__":
         print "Nrof users in all set: " + str(len(allusers))
         print "Nrof items in all set: " + str(len(allitems))
                    
-        #ÕÒ³öÓÃ»§ÔÚÑµÁ·¼¯ÖĞÒÑ¾­·ÃÎÊ¹ıµÄÎïÆ·
+        #æ‰¾å‡ºç”¨æˆ·åœ¨è®­ç»ƒé›†ä¸­å·²ç»è®¿é—®è¿‡çš„ç‰©å“
         user_items = [[0 for i in range(NUM_ITEMS)] for i in range(NUM_USERS)]
         fileReader = open(options.csvfile,'r')
         for line in fileReader.readlines():
@@ -375,7 +343,7 @@ if __name__ == "__main__":
         fileReader.close()
 
         '''
-        #ÕÒ³öÓÃ»§ÔÚ²âÊÔ¼¯ÖĞÑ¡ÔñµÄÎïÆ·
+        #æ‰¾å‡ºç”¨æˆ·åœ¨æµ‹è¯•é›†ä¸­é€‰æ‹©çš„ç‰©å“
         test_user_items = [[0 for i in range(NUM_USERS + NUM_ITEMS)] for i in range(NUM_USERS + NUM_ITEMS)]
         fileReader = open(options.csvfile3,'r')
         for line in fileReader.readlines():
@@ -388,7 +356,7 @@ if __name__ == "__main__":
         fileReader.close()
         '''
         
-        #³õÊ¼»¯Í¼G
+        #åˆå§‹åŒ–å›¾G
         starttime1 = datetime.datetime.now()
         G = Init_graph_time(options)
         print "Graph G has " + str(len(G)) + " nodes"
@@ -396,17 +364,17 @@ if __name__ == "__main__":
         print  unicode(endtime1)
         timeUse1 = unicode((endtime1-starttime1).seconds)
         print timeUse1
-        #Hammock½¨Í¼,wÍ¨¹ıÊµ²âµÃµ½
+        #Hammockå»ºå›¾,wé€šè¿‡å®æµ‹å¾—åˆ°
         '''
         uw = 115
         G = Hammock(G,uw)
         '''
-        #²ÎÊı¦Á£¬µü´ú´ÎÊıÖ¸¶¨,ÑµÁ·¼¯ÑµÁ·
+        #å‚æ•°Î±ï¼Œè¿­ä»£æ¬¡æ•°æŒ‡å®š,è®­ç»ƒé›†è®­ç»ƒ
         alpha = 0.8
-        #Í¨¹ıÊµ²âµÃµ½µü´ú´ÎÊı
+        #é€šè¿‡å®æµ‹å¾—åˆ°è¿­ä»£æ¬¡æ•°
         steps = 45
                    
-        #¼ÆËãG1×ªÒÆ¾ØÕó
+        #è®¡ç®—G1è½¬ç§»çŸ©é˜µ
         print "Init G1 trasMatrix....."
         trasMatrixFile = open("transMatrix.csv",'w')
 
@@ -422,16 +390,16 @@ if __name__ == "__main__":
                 trasMatrix[i][j] = float(G[i][j]) / sum_ij
                 sum_raw += trasMatrix[i][j]
             trasMatrixFile.write(str(sum_raw)+ "\n")
-        #¼ÆËã(1-alpha*MT)µÄÄæ
+        #è®¡ç®—(1-alpha*MT)çš„é€†
         #factor = Factor(trasMatrix,alpha)
                    
-        #user_rankÃ¿Ò»ÁĞ´ú±í¸ÃÁĞµÚÒ»¸öÔªËØÏÂµÄrankÖµ¡£ĞĞ¿ÉÒÔ´ú±íÕâ¸öµãÔÚ²»Í¬Æğµã¿ªÊ¼ÓÎ×ßÏÂµÄ±»·ÃÎÊÖµ£¬¿ÉÒÔ¿´³öÖØÒªĞÔ¡£
+        #user_rankæ¯ä¸€åˆ—ä»£è¡¨è¯¥åˆ—ç¬¬ä¸€ä¸ªå…ƒç´ ä¸‹çš„rankå€¼ã€‚è¡Œå¯ä»¥ä»£è¡¨è¿™ä¸ªç‚¹åœ¨ä¸åŒèµ·ç‚¹å¼€å§‹æ¸¸èµ°ä¸‹çš„è¢«è®¿é—®å€¼ï¼Œå¯ä»¥çœ‹å‡ºé‡è¦æ€§ã€‚
         #user_rank = PersonalRank(G,alpha,steps,trasMatrix)
         
-        #ÍÆ¼öÊıÁ¿Ö¸¶¨£¬¿ªÊ¼ÍÆ¼ö¡£²¢¼ÇÂ¼ÍÆ¼ö½á¹û
+        #æ¨èæ•°é‡æŒ‡å®šï¼Œå¼€å§‹æ¨èã€‚å¹¶è®°å½•æ¨èç»“æœ
         nrofRecommendList = 15
-        #user_recommendListÊÇÒ»¸ö ÓÃ»§Êı*ÍÆ¼ö³¤¶È µÄ¾ØÕó£¬Ã¿ĞĞ´ú±íÕâ¸öÓÃ»§µÄ·ÃÎÊ¸ÅÂÊ·Ö²¼
-        #·Ö±ğ½øĞĞNUM_TYPE´ÎÍÆ¼öºÍ²âÊÔ
+        #user_recommendListæ˜¯ä¸€ä¸ª ç”¨æˆ·æ•°*æ¨èé•¿åº¦ çš„çŸ©é˜µï¼Œæ¯è¡Œä»£è¡¨è¿™ä¸ªç”¨æˆ·çš„è®¿é—®æ¦‚ç‡åˆ†å¸ƒ
+        #åˆ†åˆ«è¿›è¡ŒNUM_TYPEæ¬¡æ¨èå’Œæµ‹è¯•
 
         nrofAll_items = len(allitems)
         type_list=[14,18,21,19,15,9,27,25,8,10,26,11]
@@ -439,7 +407,7 @@ if __name__ == "__main__":
             user_rank = PersonalRank(alpha,steps,trasMatrix,type)
             RemAndEva(type,nrofRecommendList,user_rank,user_items,options,nrofAll_items)
             print
-        #¼ÇÂ¼Ê±¼ä
+        #è®°å½•æ—¶é—´
         endtime = datetime.datetime.now()
         print  unicode(endtime)
         timeUse = unicode((endtime-starttime).seconds)
